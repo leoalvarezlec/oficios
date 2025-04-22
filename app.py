@@ -1,20 +1,22 @@
 import streamlit as st
 from docx import Document
 from docx.enum.text import WD_ALIGN_PARAGRAPH
-from docx.shared import Pt
+from docx.shared import Pt, Inches
 from io import BytesIO
+import os
 
 # -------------------------
-# Abrir plantilla desde archivo del repo
+# Ruta de imágenes del encabezado y pie de página
 # -------------------------
-PLANTILLA_PATH = "plantilla_file.docx"  # archivo ya en tu repo
+ENCABEZADO_IMG = "encabezado.png"  # asegúrate que esté en la misma carpeta
+PIE_IMG = "pie.png"
 
-st.title("Generador de Oficios")
+st.title("📝 Generador de Oficios")
 
 # 1️⃣ Ingreso del número de oficio
 numero_oficio = st.text_input("Número de oficio", placeholder="Ej. OF-123/2025")
 
-# 2️⃣ Selección de destinatario (como antes)
+# 2️⃣ Selección de destinatario
 destinatarios = [
     {"nombre": "Juan Pérez", "cargo": "Director General"},
     {"nombre": "Laura Gómez", "cargo": "Jefa de Finanzas"},
@@ -51,17 +53,27 @@ for i, tabla in enumerate(st.session_state.tablas):
 
 # 4️⃣ Generar documento
 if st.button("Generar oficio"):
-    doc = Document(PLANTILLA_PATH)
+    doc = Document("plantilla_file.docx")
 
-    # 🔳 Insertar número de oficio en la esquina superior derecha
+    # Sección actual
     section = doc.sections[0]
+
+    # Encabezado con imagen
     header = section.header
-    p = header.paragraphs[0] if header.paragraphs else header.add_paragraph()
-    p.text = numero_oficio
-    p.alignment = WD_ALIGN_PARAGRAPH.RIGHT
-    run = p.runs[0]
+    header_paragraph = header.paragraphs[0] if header.paragraphs else header.add_paragraph()
+    header_paragraph.add_run().add_picture(ENCABEZADO_IMG, width=Inches(6.0))
+
+    # Número de oficio en el encabezado, alineado a la derecha
+    num_parrafo = header.add_paragraph()
+    num_parrafo.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+    run = num_parrafo.add_run(numero_oficio)
     run.bold = True
     run.font.size = Pt(12)
+
+    # Pie de página con imagen
+    footer = section.footer
+    footer_paragraph = footer.paragraphs[0] if footer.paragraphs else footer.add_paragraph()
+    footer_paragraph.add_run().add_picture(PIE_IMG, width=Inches(6.0))
 
     # Contenido del oficio
     doc.add_paragraph(f"Destinatario: {destinatario['nombre']}, {destinatario['cargo']}")
@@ -79,5 +91,5 @@ if st.button("Generar oficio"):
     doc.save(buffer)
     buffer.seek(0)
 
-    st.success("Oficio generado ✅")
-    st.download_button("Descargar oficio", buffer, file_name=f"Oficio_{numero_oficio}.docx")
+    st.success("Oficio generado correctamente 🎉")
+    st.download_button("📥 Descargar oficio", buffer, file_name=f"Oficio_{numero_oficio}.docx")
