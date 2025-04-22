@@ -53,7 +53,7 @@ for i, tabla in enumerate(st.session_state.tablas):
 
 # 4️⃣ Generar documento
 if st.button("Generar oficio"):
-    doc = Document("plantilla_file.docx")
+    doc = Document()#"plantilla_file.docx")
 
     # Sección actual
     section = doc.sections[0]
