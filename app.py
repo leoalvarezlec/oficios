@@ -51,7 +51,7 @@ for i, tabla in enumerate(st.session_state.tablas):
 
 # 4️⃣ Generar documento
 if st.button("Generar oficio"):
-    doc = Document(plantilla_file)
+    doc = Document(plantilla_file.docx)
 
     # 🔳 Insertar número de oficio en la esquina superior derecha
     section = doc.sections[0]
