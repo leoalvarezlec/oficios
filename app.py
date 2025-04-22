@@ -53,7 +53,7 @@ for i, tabla in enumerate(st.session_state.tablas):
 # 4. Generar el oficio
 # --------------------------
 if st.button("Generar oficio"):
-    doc = Document()
+    doc = Document(plantilla_file)
 
     # Encabezado básico
     doc.add_paragraph(f"Oficio para: {destinatario['nombre']}, {destinatario['cargo']}")
