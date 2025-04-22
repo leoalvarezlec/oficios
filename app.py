@@ -3,19 +3,20 @@ from docx import Document
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.shared import Pt, Inches
 from io import BytesIO
-import os
+from docx.oxml.ns import qn
+from docx.oxml import OxmlElement
 
-def alinear_parrafo_derecha(parrafo):
+def alinear_imagen_a_la_derecha(parrafo):
     parrafo.alignment = WD_ALIGN_PARAGRAPH.RIGHT
     pPr = parrafo._element.get_or_add_pPr()
     ind = OxmlElement('w:ind')
-    ind.set(qn('w:left'), '0')
+    ind.set(qn('w:left'), '0')  # Eliminar sangría izquierda
     pPr.append(ind)
 
 # -------------------------
 # Ruta de imágenes del encabezado y pie de página
 # -------------------------
-ENCABEZADO_IMG = "encabezado.png"  # asegúrate que esté en la misma carpeta
+ENCABEZADO_IMG = "encabezado.png"  # Asegúrate de que esté en la misma carpeta
 PIE_IMG = "pie.png"
 
 st.title("📝 Generador de Oficios")
@@ -60,17 +61,16 @@ for i, tabla in enumerate(st.session_state.tablas):
 
 # 4️⃣ Generar documento
 if st.button("Generar oficio"):
-    doc = Document()#"plantilla_file.docx")
+    doc = Document()  # Nuevo documento, sin plantilla
 
     # Sección actual
     section = doc.sections[0]
 
-    # Encabezado con imagen
+    # 1️⃣ Encabezado con imagen alineada a la derecha
+    header = section.header
     header_paragraph = header.add_paragraph()
     header_paragraph.add_run().add_picture(ENCABEZADO_IMG, width=Inches(7.5))
     alinear_imagen_a_la_derecha(header_paragraph)
-
-
 
     # Número de oficio en el encabezado, alineado a la derecha
     num_parrafo = header.add_paragraph()
@@ -79,27 +79,31 @@ if st.button("Generar oficio"):
     run.bold = True
     run.font.size = Pt(12)
 
-    # Pie de página con imagen
+    # 2️⃣ Pie de página con imagen alineada a la derecha
+    footer = section.footer
     footer_paragraph = footer.add_paragraph()
     footer_paragraph.add_run().add_picture(PIE_IMG, width=Inches(7.5))
     alinear_imagen_a_la_derecha(footer_paragraph)
 
-
-    # Contenido del oficio
+    # 3️⃣ Contenido del oficio
     doc.add_paragraph(f"Destinatario: {destinatario['nombre']}, {destinatario['cargo']}")
 
+    # Agregar textos adicionales
     for texto in st.session_state.textos:
         doc.add_paragraph(texto)
 
+    # Agregar tablas
     for tabla in st.session_state.tablas:
         table = doc.add_table(rows=1, cols=len(tabla[0]))
         hdr_cells = table.rows[0].cells
         for i, col in enumerate(tabla[0]):
             hdr_cells[i].text = col
 
+    # 4️⃣ Guardar el archivo generado en memoria
     buffer = BytesIO()
     doc.save(buffer)
     buffer.seek(0)
 
+    # Mostrar mensaje de éxito y permitir descarga
     st.success("Oficio generado correctamente 🎉")
     st.download_button("📥 Descargar oficio", buffer, file_name=f"Oficio_{numero_oficio}.docx")
