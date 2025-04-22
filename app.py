@@ -66,10 +66,10 @@ if st.button("Generar oficio"):
     section = doc.sections[0]
 
     # Encabezado con imagen
-    header_paragraph = header.paragraphs[0] if header.paragraphs else header.add_paragraph()
-    run = header_paragraph.add_run()
-    run.add_picture(ENCABEZADO_IMG, width=Inches(7.5))
-    alinear_parrafo_derecha(header_paragraph)
+    header_paragraph = header.add_paragraph()
+    header_paragraph.add_run().add_picture(ENCABEZADO_IMG, width=Inches(7.5))
+    alinear_imagen_a_la_derecha(header_paragraph)
+
 
 
     # Número de oficio en el encabezado, alineado a la derecha
@@ -80,9 +80,9 @@ if st.button("Generar oficio"):
     run.font.size = Pt(12)
 
     # Pie de página con imagen
-    footer_paragraph = footer.paragraphs[0] if footer.paragraphs else footer.add_paragraph()
+    footer_paragraph = footer.add_paragraph()
     footer_paragraph.add_run().add_picture(PIE_IMG, width=Inches(7.5))
-    alinear_parrafo_derecha(footer_paragraph)
+    alinear_imagen_a_la_derecha(footer_paragraph)
 
 
     # Contenido del oficio
