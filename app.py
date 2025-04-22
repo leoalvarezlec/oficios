@@ -1,68 +1,74 @@
 import streamlit as st
 from docx import Document
+from docx.enum.text import WD_ALIGN_PARAGRAPH
+from docx.shared import Pt
 from io import BytesIO
 
-# --------------------------
-# 1. Lista de destinatarios
-# --------------------------
+# -------------------------
+# Abrir plantilla desde archivo del repo
+# -------------------------
+PLANTILLA_PATH = "plantilla.docx"  # archivo ya en tu repo
+
+st.title("Generador de Oficios")
+
+# 1️⃣ Ingreso del número de oficio
+numero_oficio = st.text_input("Número de oficio", placeholder="Ej. OF-123/2025")
+
+# 2️⃣ Selección de destinatario (como antes)
 destinatarios = [
     {"nombre": "Juan Pérez", "cargo": "Director General"},
     {"nombre": "Laura Gómez", "cargo": "Jefa de Finanzas"},
     {"nombre": "Carlos Ruiz", "cargo": "Coordinador de Proyectos"}
 ]
 
-st.title("Generador de Oficios Personalizados")
-
-# --------------------------
-# 2. Elegir destinatario
-# --------------------------
 nombres = [d["nombre"] for d in destinatarios]
 nombre_seleccionado = st.selectbox("Selecciona un destinatario", nombres)
-
-# Obtener los datos del destinatario elegido
 destinatario = next(d for d in destinatarios if d["nombre"] == nombre_seleccionado)
 
-# --------------------------
-# 3. Secciones dinámicas
-# --------------------------
+# 3️⃣ Inputs dinámicos
 if "textos" not in st.session_state:
     st.session_state.textos = []
-
 if "tablas" not in st.session_state:
     st.session_state.tablas = []
 
-if st.button("Agregar texto nuevo"):
+if st.button("Agregar texto"):
     st.session_state.textos.append("")
 
-if st.button("Agregar tabla nueva"):
-    st.session_state.tablas.append([["", ""]])  # tabla básica de 2 columnas
+if st.button("Agregar tabla"):
+    st.session_state.tablas.append([["", ""]])
 
-# Mostrar campos de texto agregados
+# Campos de texto
 for i, texto in enumerate(st.session_state.textos):
-    st.session_state.textos[i] = st.text_area(f"Texto #{i+1}", value=texto, height=100)
+    st.session_state.textos[i] = st.text_area(f"Texto #{i+1}", value=texto)
 
-# Mostrar tablas agregadas
+# Tablas
 for i, tabla in enumerate(st.session_state.tablas):
     st.markdown(f"**Tabla #{i+1}**")
     cols = st.columns(2)
-    fila1 = cols[0].text_input(f"Fila 1, Columna 1 - T{i}", value=tabla[0][0], key=f"t{i}_00")
-    fila2 = cols[1].text_input(f"Fila 1, Columna 2 - T{i}", value=tabla[0][1], key=f"t{i}_01")
+    fila1 = cols[0].text_input(f"T{i}_0", value=tabla[0][0], key=f"t{i}_00")
+    fila2 = cols[1].text_input(f"T{i}_1", value=tabla[0][1], key=f"t{i}_01")
     st.session_state.tablas[i] = [[fila1, fila2]]
 
-# --------------------------
-# 4. Generar el oficio
-# --------------------------
+# 4️⃣ Generar documento
 if st.button("Generar oficio"):
-    doc = Document(plantilla_file.docx)
+    doc = Document(PLANTILLA_PATH)
 
-    # Encabezado básico
-    doc.add_paragraph(f"Oficio para: {destinatario['nombre']}, {destinatario['cargo']}")
+    # 🔳 Insertar número de oficio en la esquina superior derecha
+    section = doc.sections[0]
+    header = section.header
+    p = header.paragraphs[0] if header.paragraphs else header.add_paragraph()
+    p.text = numero_oficio
+    p.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+    run = p.runs[0]
+    run.bold = True
+    run.font.size = Pt(12)
 
-    # Agregar los textos
+    # Contenido del oficio
+    doc.add_paragraph(f"Destinatario: {destinatario['nombre']}, {destinatario['cargo']}")
+
     for texto in st.session_state.textos:
         doc.add_paragraph(texto)
 
-    # Agregar las tablas
     for tabla in st.session_state.tablas:
         table = doc.add_table(rows=1, cols=len(tabla[0]))
         hdr_cells = table.rows[0].cells
@@ -73,6 +79,5 @@ if st.button("Generar oficio"):
     doc.save(buffer)
     buffer.seek(0)
 
-    st.success("Oficio generado correctamente 🎉")
-    st.download_button("Descargar oficio", buffer, file_name="oficio.docx")
-
+    st.success("Oficio generado ✅")
+    st.download_button("Descargar oficio", buffer, file_name=f"Oficio_{numero_oficio}.docx")
