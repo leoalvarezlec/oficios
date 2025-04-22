@@ -7,7 +7,7 @@ from io import BytesIO
 # -------------------------
 # Abrir plantilla desde archivo del repo
 # -------------------------
-PLANTILLA_PATH = "plantilla.docx"  # archivo ya en tu repo
+PLANTILLA_PATH = "plantilla_file.docx"  # archivo ya en tu repo
 
 st.title("Generador de Oficios")
 
@@ -51,7 +51,7 @@ for i, tabla in enumerate(st.session_state.tablas):
 
 # 4️⃣ Generar documento
 if st.button("Generar oficio"):
-    doc = Document(plantilla_file.docx)
+    doc = Document(PLANTILLA_PATH)
 
     # 🔳 Insertar número de oficio en la esquina superior derecha
     section = doc.sections[0]
