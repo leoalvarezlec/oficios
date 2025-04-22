@@ -61,7 +61,7 @@ if st.button("Generar oficio"):
     # Encabezado con imagen
     header = section.header
     header_paragraph = header.paragraphs[0] if header.paragraphs else header.add_paragraph()
-    header_paragraph.add_run().add_picture(ENCABEZADO_IMG, width=Inches(6.0))
+    header_paragraph.add_run().add_picture(ENCABEZADO_IMG, width=Inches(7.0))
 
     # Número de oficio en el encabezado, alineado a la derecha
     num_parrafo = header.add_paragraph()
@@ -73,7 +73,7 @@ if st.button("Generar oficio"):
     # Pie de página con imagen
     footer = section.footer
     footer_paragraph = footer.paragraphs[0] if footer.paragraphs else footer.add_paragraph()
-    footer_paragraph.add_run().add_picture(PIE_IMG, width=Inches(6.0))
+    footer_paragraph.add_run().add_picture(PIE_IMG, width=Inches(7.0))
 
     # Contenido del oficio
     doc.add_paragraph(f"Destinatario: {destinatario['nombre']}, {destinatario['cargo']}")
