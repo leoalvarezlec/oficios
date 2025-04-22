@@ -5,6 +5,13 @@ from docx.shared import Pt, Inches
 from io import BytesIO
 import os
 
+def alinear_parrafo_derecha(parrafo):
+    parrafo.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+    pPr = parrafo._element.get_or_add_pPr()
+    ind = OxmlElement('w:ind')
+    ind.set(qn('w:left'), '0')
+    pPr.append(ind)
+
 # -------------------------
 # Ruta de imágenes del encabezado y pie de página
 # -------------------------
@@ -59,9 +66,11 @@ if st.button("Generar oficio"):
     section = doc.sections[0]
 
     # Encabezado con imagen
-    header = section.header
     header_paragraph = header.paragraphs[0] if header.paragraphs else header.add_paragraph()
-    header_paragraph.add_run().add_picture(ENCABEZADO_IMG, width=Inches(7.0))
+    run = header_paragraph.add_run()
+    run.add_picture(ENCABEZADO_IMG, width=Inches(7.5))
+    alinear_parrafo_derecha(header_paragraph)
+
 
     # Número de oficio en el encabezado, alineado a la derecha
     num_parrafo = header.add_paragraph()
@@ -71,9 +80,10 @@ if st.button("Generar oficio"):
     run.font.size = Pt(12)
 
     # Pie de página con imagen
-    footer = section.footer
     footer_paragraph = footer.paragraphs[0] if footer.paragraphs else footer.add_paragraph()
-    footer_paragraph.add_run().add_picture(PIE_IMG, width=Inches(7.0))
+    footer_paragraph.add_run().add_picture(PIE_IMG, width=Inches(7.5))
+    alinear_parrafo_derecha(footer_paragraph)
+
 
     # Contenido del oficio
     doc.add_paragraph(f"Destinatario: {destinatario['nombre']}, {destinatario['cargo']}")
