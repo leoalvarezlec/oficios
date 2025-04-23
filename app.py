@@ -6,18 +6,6 @@ from io import BytesIO
 from docx.oxml.ns import qn
 from docx.oxml import OxmlElement
 
-def alinear_imagen_a_la_derecha(parrafo):
-    parrafo.alignment = WD_ALIGN_PARAGRAPH.RIGHT
-    pPr = parrafo._element.get_or_add_pPr()
-    ind = OxmlElement('w:ind')
-    ind.set(qn('w:left'), '0')  # Eliminar sangría izquierda
-    pPr.append(ind)
-
-# -------------------------
-# Ruta de imágenes del encabezado y pie de página
-# -------------------------
-ENCABEZADO_IMG = "encabezado.png"  # Asegúrate de que esté en la misma carpeta
-PIE_IMG = "pie.png"
 
 st.title("📝 Generador de Oficios")
 
@@ -61,16 +49,11 @@ for i, tabla in enumerate(st.session_state.tablas):
 
 # 4️⃣ Generar documento
 if st.button("Generar oficio"):
-    doc = Document()  # Nuevo documento, sin plantilla
+    doc = Document("plantilla_file.docx")
 
     # Sección actual
     section = doc.sections[0]
 
-    # 1️⃣ Encabezado con imagen alineada a la derecha
-    header = section.header
-    header_paragraph = header.add_paragraph()
-    header_paragraph.add_run().add_picture(ENCABEZADO_IMG, width=Inches(7.5))
-    alinear_imagen_a_la_derecha(header_paragraph)
 
     # Número de oficio en el encabezado, alineado a la derecha
     num_parrafo = header.add_paragraph()
@@ -78,12 +61,6 @@ if st.button("Generar oficio"):
     run = num_parrafo.add_run(numero_oficio)
     run.bold = True
     run.font.size = Pt(12)
-
-    # 2️⃣ Pie de página con imagen alineada a la derecha
-    footer = section.footer
-    footer_paragraph = footer.add_paragraph()
-    footer_paragraph.add_run().add_picture(PIE_IMG, width=Inches(7.5))
-    alinear_imagen_a_la_derecha(footer_paragraph)
 
     # 3️⃣ Contenido del oficio
     doc.add_paragraph(f"Destinatario: {destinatario['nombre']}, {destinatario['cargo']}")
