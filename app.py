@@ -83,7 +83,7 @@ if st.button("Generar oficio"):
     # Agregar número de oficio debajo
     num_parrafo = header.add_paragraph()
     num_parrafo.alignment = WD_ALIGN_PARAGRAPH.RIGHT
-    run = num_parrafo.add_run(numero_oficio)
+    run = num_parrafo.add_run("Número de oficio:  "+ numero_oficio)
     run.bold = True
     run.font.size = Pt(12)
 
