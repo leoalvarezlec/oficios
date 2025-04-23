@@ -3,20 +3,29 @@ from docx import Document
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.shared import Pt
 from io import BytesIO
+from docx.oxml.ns import qn
+from docx.oxml import OxmlElement
+import datetime
 
 st.title("📝 Generador de Oficios")
 
-# 1️⃣ Número de oficio
+# 1️⃣ Ingreso del número de oficio
 numero_oficio = st.text_input("Número de oficio", placeholder="Ej. OF-123/2025")
 
-# 2️⃣ Selección de fecha y asunto
-fechas = ["22 DE ABRIL DE 2025", "23 DE ABRIL DE 2025", "24 DE ABRIL DE 2025"]
-asuntos = ["Entrega de reportes", "Solicitud de información", "Seguimiento de actividades"]
+# 2️⃣ Calendario para seleccionar fecha
+fecha_seleccionada = st.date_input("Selecciona la fecha", value=datetime.date.today())
+fecha = fecha_seleccionada.strftime("%d DE %B DE %Y").upper()
 
-fecha = st.selectbox("Selecciona la fecha", fechas)
+# 3️⃣ Selección de asunto
+asuntos = [
+    "SOLICITUD DE INFORMACIÓN",
+    "SEGUIMIENTO A PROYECTO",
+    "ENTREGA DE RESULTADOS",
+    "CITATORIO A REUNIÓN"
+]
 asunto = st.selectbox("Selecciona el asunto", asuntos)
 
-# 3️⃣ Selección de destinatario
+# 4️⃣ Selección de destinatario
 destinatarios = [
     {"nombre": "Juan Pérez", "cargo": "Director General"},
     {"nombre": "Laura Gómez", "cargo": "Jefa de Finanzas"},
@@ -27,7 +36,7 @@ nombres = [d["nombre"] for d in destinatarios]
 nombre_seleccionado = st.selectbox("Selecciona un destinatario", nombres)
 destinatario = next(d for d in destinatarios if d["nombre"] == nombre_seleccionado)
 
-# 4️⃣ Inputs dinámicos
+# 5️⃣ Inputs dinámicos
 if "textos" not in st.session_state:
     st.session_state.textos = []
 if "tablas" not in st.session_state:
@@ -51,41 +60,46 @@ for i, tabla in enumerate(st.session_state.tablas):
     fila2 = cols[1].text_input(f"T{i}_1", value=tabla[0][1], key=f"t{i}_01")
     st.session_state.tablas[i] = [[fila1, fila2]]
 
-# 5️⃣ Generar documento
+# 6️⃣ Generar documento
 if st.button("Generar oficio"):
-    doc = Document("plantilla_file.docx")
-    section = doc.sections[0]
+    doc = Document("plantilla_file.docx")  # Usa tu plantilla con encabezado/pie
 
-    # Encabezado → Número de oficio alineado a la derecha
+    section = doc.sections[0]
     header = section.header
-    num_parrafo = header.paragraphs[0] if header.paragraphs else header.add_paragraph()
+
+    # Agregar encabezado institucional
+    if not header.paragraphs:
+        header_paragraph = header.add_paragraph()
+    else:
+        header_paragraph = header.paragraphs[0]
+
+    # Agregar el texto institucional, fecha y asunto
+    parrafo_derecha = header.add_paragraph()
+    parrafo_derecha.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+    run = parrafo_derecha.add_run(f"DIRECCIÓN DE ADMINISTRACIÓN Y FINANZAS\nCIUDAD DE MÉXICO, {fecha}\nASUNTO: {asunto}")
+    run.bold = True
+    run.font.size = Pt(11)
+
+    # Agregar número de oficio debajo
+    num_parrafo = header.add_paragraph()
     num_parrafo.alignment = WD_ALIGN_PARAGRAPH.RIGHT
     run = num_parrafo.add_run(numero_oficio)
     run.bold = True
     run.font.size = Pt(12)
 
-    # Texto superior derecho antes del destinatario
-    p_info = doc.add_paragraph()
-    p_info.alignment = WD_ALIGN_PARAGRAPH.RIGHT
-    run = p_info.add_run(f"DIRECCIÓN DE ADMINISTRACIÓN Y FINANZAS\nCIUDAD DE MÉXICO, {fecha}\nASUNTO: {asunto}")
-    run.font.size = Pt(12)
-    run.bold = True
-
-    # Destinatario
+    # Contenido del oficio
     doc.add_paragraph(f"Destinatario: {destinatario['nombre']}, {destinatario['cargo']}")
 
-    # Textos adicionales
     for texto in st.session_state.textos:
         doc.add_paragraph(texto)
 
-    # Tablas
     for tabla in st.session_state.tablas:
         table = doc.add_table(rows=1, cols=len(tabla[0]))
         hdr_cells = table.rows[0].cells
         for i, col in enumerate(tabla[0]):
             hdr_cells[i].text = col
 
-    # Guardar documento
+    # Guardar el documento en memoria
     buffer = BytesIO()
     doc.save(buffer)
     buffer.seek(0)
