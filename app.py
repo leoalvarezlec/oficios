@@ -9,14 +9,14 @@ import datetime
 
 st.title("📝 Generador de Oficios")
 
-# 1️⃣ Ingreso del número de oficio
+# 1️⃣ Número de oficio
 numero_oficio = st.text_input("Número de oficio", placeholder="Ej. OF-123/2025")
 
-# 2️⃣ Calendario para seleccionar fecha
+# 2️⃣ Fecha con calendario
 fecha_seleccionada = st.date_input("Selecciona la fecha", value=datetime.date.today())
 fecha = fecha_seleccionada.strftime("%d DE %B DE %Y").upper()
 
-# 3️⃣ Selección de asunto
+# 3️⃣ Asunto
 asuntos = [
     "SOLICITUD DE INFORMACIÓN",
     "SEGUIMIENTO A PROYECTO",
@@ -25,7 +25,7 @@ asuntos = [
 ]
 asunto = st.selectbox("Selecciona el asunto", asuntos)
 
-# 4️⃣ Selección de destinatario
+# 4️⃣ Destinatario
 destinatarios = [
     {"nombre": "Juan Pérez", "cargo": "Director General"},
     {"nombre": "Laura Gómez", "cargo": "Jefa de Finanzas"},
@@ -60,34 +60,35 @@ for i, tabla in enumerate(st.session_state.tablas):
     fila2 = cols[1].text_input(f"T{i}_1", value=tabla[0][1], key=f"t{i}_01")
     st.session_state.tablas[i] = [[fila1, fila2]]
 
-# 6️⃣ Generar documento
+# 6️⃣ Firma
+firmante_nombre = st.text_input("Nombre del firmante", placeholder="Ej. María López")
+firmante_cargo = st.text_input("Cargo del firmante", placeholder="Ej. Subdirectora de Administración")
+
+# 7️⃣ CC
+cc = st.text_area("CC (Con Copia Para)", placeholder="Ej. Archivo, Coordinación de Comunicación, etc.")
+
+# 8️⃣ Generar documento
 if st.button("Generar oficio"):
-    doc = Document("plantilla_file.docx")  # Usa tu plantilla con encabezado/pie
+    doc = Document("plantilla_file.docx")
 
     section = doc.sections[0]
     header = section.header
 
-    # Agregar encabezado institucional
-    if not header.paragraphs:
-        header_paragraph = header.add_paragraph()
-    else:
-        header_paragraph = header.paragraphs[0]
-
-    # Agregar el texto institucional, fecha y asunto
+    # Encabezado institucional + fecha + asunto
     parrafo_derecha = header.add_paragraph()
     parrafo_derecha.alignment = WD_ALIGN_PARAGRAPH.RIGHT
     run = parrafo_derecha.add_run(f"DIRECCIÓN DE ADMINISTRACIÓN Y FINANZAS\nCIUDAD DE MÉXICO, {fecha}\nASUNTO: {asunto}")
     run.bold = True
     run.font.size = Pt(11)
 
-    # Agregar número de oficio debajo
+    # Número de oficio
     num_parrafo = header.add_paragraph()
     num_parrafo.alignment = WD_ALIGN_PARAGRAPH.RIGHT
-    run = num_parrafo.add_run("Número de oficio:  "+ numero_oficio)
+    run = num_parrafo.add_run(numero_oficio)
     run.bold = True
     run.font.size = Pt(12)
 
-    # Contenido del oficio
+    # Cuerpo del oficio
     doc.add_paragraph(f"Destinatario: {destinatario['nombre']}, {destinatario['cargo']}")
 
     for texto in st.session_state.textos:
@@ -99,7 +100,16 @@ if st.button("Generar oficio"):
         for i, col in enumerate(tabla[0]):
             hdr_cells[i].text = col
 
-    # Guardar el documento en memoria
+    # Firma
+    doc.add_paragraph("\n\nAtentamente,\n")
+    doc.add_paragraph(firmante_nombre)
+    doc.add_paragraph(firmante_cargo)
+
+    # CC
+    if cc.strip():
+        doc.add_paragraph("\nC.C.P. " + cc, style='Normal')
+
+    # Guardar y descargar
     buffer = BytesIO()
     doc.save(buffer)
     buffer.seek(0)
