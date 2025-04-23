@@ -6,10 +6,17 @@ from io import BytesIO
 
 st.title("📝 Generador de Oficios")
 
-# 1️⃣ Ingreso del número de oficio
+# 1️⃣ Número de oficio
 numero_oficio = st.text_input("Número de oficio", placeholder="Ej. OF-123/2025")
 
-# 2️⃣ Selección de destinatario
+# 2️⃣ Selección de fecha y asunto
+fechas = ["22 DE ABRIL DE 2025", "23 DE ABRIL DE 2025", "24 DE ABRIL DE 2025"]
+asuntos = ["Entrega de reportes", "Solicitud de información", "Seguimiento de actividades"]
+
+fecha = st.selectbox("Selecciona la fecha", fechas)
+asunto = st.selectbox("Selecciona el asunto", asuntos)
+
+# 3️⃣ Selección de destinatario
 destinatarios = [
     {"nombre": "Juan Pérez", "cargo": "Director General"},
     {"nombre": "Laura Gómez", "cargo": "Jefa de Finanzas"},
@@ -20,7 +27,7 @@ nombres = [d["nombre"] for d in destinatarios]
 nombre_seleccionado = st.selectbox("Selecciona un destinatario", nombres)
 destinatario = next(d for d in destinatarios if d["nombre"] == nombre_seleccionado)
 
-# 3️⃣ Inputs dinámicos
+# 4️⃣ Inputs dinámicos
 if "textos" not in st.session_state:
     st.session_state.textos = []
 if "tablas" not in st.session_state:
@@ -44,44 +51,44 @@ for i, tabla in enumerate(st.session_state.tablas):
     fila2 = cols[1].text_input(f"T{i}_1", value=tabla[0][1], key=f"t{i}_01")
     st.session_state.tablas[i] = [[fila1, fila2]]
 
-# 4️⃣ Generar documento
+# 5️⃣ Generar documento
 if st.button("Generar oficio"):
-    # Cargar la plantilla de documento
     doc = Document("plantilla_file.docx")
-
-    # Sección actual (encabezado y pie de página)
     section = doc.sections[0]
 
-    # Acceder al encabezado
+    # Encabezado → Número de oficio alineado a la derecha
     header = section.header
-    # Crear un nuevo párrafo en el encabezado si no existe
     num_parrafo = header.paragraphs[0] if header.paragraphs else header.add_paragraph()
-
-    # Número de oficio en el encabezado, alineado a la derecha
     num_parrafo.alignment = WD_ALIGN_PARAGRAPH.RIGHT
     run = num_parrafo.add_run(numero_oficio)
     run.bold = True
     run.font.size = Pt(12)
 
-    # 3️⃣ Contenido del oficio
+    # Texto superior derecho antes del destinatario
+    p_info = doc.add_paragraph()
+    p_info.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+    run = p_info.add_run(f"DIRECCIÓN DE ADMINISTRACIÓN Y FINANZAS\nCIUDAD DE MÉXICO, {fecha}\nASUNTO: {asunto}")
+    run.font.size = Pt(12)
+    run.bold = True
+
+    # Destinatario
     doc.add_paragraph(f"Destinatario: {destinatario['nombre']}, {destinatario['cargo']}")
 
-    # Agregar textos adicionales
+    # Textos adicionales
     for texto in st.session_state.textos:
         doc.add_paragraph(texto)
 
-    # Agregar tablas
+    # Tablas
     for tabla in st.session_state.tablas:
         table = doc.add_table(rows=1, cols=len(tabla[0]))
         hdr_cells = table.rows[0].cells
         for i, col in enumerate(tabla[0]):
             hdr_cells[i].text = col
 
-    # 4️⃣ Guardar el archivo generado en memoria
+    # Guardar documento
     buffer = BytesIO()
     doc.save(buffer)
     buffer.seek(0)
 
-    # Mostrar mensaje de éxito y permitir descarga
     st.success("Oficio generado correctamente 🎉")
     st.download_button("📥 Descargar oficio", buffer, file_name=f"Oficio_{numero_oficio}.docx")
