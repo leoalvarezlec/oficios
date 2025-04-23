@@ -1,11 +1,8 @@
 import streamlit as st
 from docx import Document
 from docx.enum.text import WD_ALIGN_PARAGRAPH
-from docx.shared import Pt, Inches
+from docx.shared import Pt
 from io import BytesIO
-from docx.oxml.ns import qn
-from docx.oxml import OxmlElement
-
 
 st.title("📝 Generador de Oficios")
 
@@ -49,14 +46,18 @@ for i, tabla in enumerate(st.session_state.tablas):
 
 # 4️⃣ Generar documento
 if st.button("Generar oficio"):
+    # Cargar la plantilla de documento
     doc = Document("plantilla_file.docx")
 
-    # Sección actual
+    # Sección actual (encabezado y pie de página)
     section = doc.sections[0]
 
+    # Acceder al encabezado
+    header = section.header
+    # Crear un nuevo párrafo en el encabezado si no existe
+    num_parrafo = header.paragraphs[0] if header.paragraphs else header.add_paragraph()
 
     # Número de oficio en el encabezado, alineado a la derecha
-    num_parrafo = header.add_paragraph()
     num_parrafo.alignment = WD_ALIGN_PARAGRAPH.RIGHT
     run = num_parrafo.add_run(numero_oficio)
     run.bold = True
